@@ -3,6 +3,7 @@ package uk.co.gossfunkel.citadelserver;
 import java.util.ArrayList;
 import java.util.List;
 
+import uk.co.gossfunkel.citadelserver.entity.settlement.ConstructionSettlement;
 import uk.co.gossfunkel.citadelserver.entity.mob.OnlinePlayer;
 import uk.co.gossfunkel.citadelserver.entity.settlement.Settlement;
 import uk.co.gossfunkel.citadelserver.level.Level;
@@ -14,10 +15,13 @@ public class Game implements Runnable {
 	
 	private boolean running = false;
 	
+	private Server server;
+	
 	private Timer timer;
 	private Level level;
 	
 	private static List<Settlement> settlements;
+	private static List<ConstructionSettlement> consettlements;
 	private static List<Integer> settx;
 	private static List<Integer> setty;
 	
@@ -26,12 +30,15 @@ public class Game implements Runnable {
 	private boolean day;
 	private int hour;
 	private int days;
-	private int month = 0;
+	private int month = 0; 
 	@SuppressWarnings("unused")
 	private int year = 0;
 	
-	public Game() {
+	public Game(Server server) {
+		this.server = server;
+		
 		settlements = new ArrayList<Settlement>();
+		consettlements = new ArrayList<ConstructionSettlement>();
 		settx = new ArrayList<Integer>();
 		setty = new ArrayList<Integer>();
 
@@ -40,6 +47,7 @@ public class Game implements Runnable {
 
 	@Override
 	public void run() {
+		server.setOne("Game running");
 		while (running) {
 			getTimer().tick();
 			if (System.currentTimeMillis() - getTimer().getSecond() > 1000) {
@@ -116,6 +124,20 @@ public class Game implements Runnable {
 			} // end inner else
 		} // end outer else
 	} // end build
+	
+	public void removeConSett(ConstructionSettlement cs) {
+		consettlements.remove(cs);
+	}
+	
+	public void addConSett(ConstructionSettlement cs) {
+		consettlements.add(cs);
+	}
+	
+	public void addSett(Settlement s) {
+		settlements.add(s);
+		settx.add(s.x());
+		setty.add(s.y());
+	}
 
 	Level getLevel() {
 		return level;

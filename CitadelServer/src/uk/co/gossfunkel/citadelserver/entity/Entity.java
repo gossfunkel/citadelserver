@@ -7,7 +7,7 @@ import uk.co.gossfunkel.citadelserver.level.Level;
 public abstract class Entity {
 	
 	// -------------------- variables -----------------------------------------
-	
+	 
 	protected int x, y;
 	private boolean removed = false;
 	protected Level level;

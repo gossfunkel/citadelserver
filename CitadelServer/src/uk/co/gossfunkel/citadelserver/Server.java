@@ -8,16 +8,19 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
 
 import uk.co.gossfunkel.citadelserver.entity.mob.OnlinePlayer;
+import uk.co.gossfunkel.citadelserver.entity.settlement.ConstructionSettlement;
 import uk.co.gossfunkel.citadelserver.net.packets.Packet;
 import uk.co.gossfunkel.citadelserver.net.packets.Packet.PacketTypes;
 import uk.co.gossfunkel.citadelserver.net.packets.Packet00Login;
 import uk.co.gossfunkel.citadelserver.net.packets.Packet01Disconnect;
 import uk.co.gossfunkel.citadelserver.net.packets.Packet02Move;
 import uk.co.gossfunkel.citadelserver.net.packets.Packet03Speech;
+import uk.co.gossfunkel.citadelserver.net.packets.Packet04Settlement;
 
 /* The game's main running class
  * 
@@ -42,6 +45,10 @@ public class Server extends JFrame implements Runnable {
 	// loop stuff
 	private boolean running = false;
 	
+	// UI stuff
+	JLabel one;
+	JTextField txtOne;
+	
 	// net stuff
 	private DatagramSocket socket;
 	
@@ -55,6 +62,15 @@ public class Server extends JFrame implements Runnable {
 		setPreferredSize(size);	
 		setTitle(title);
 		getContentPane().setLayout(null);
+		
+		one = new JLabel("Game not running");
+        one.setBounds(10, 10, 90, 21);
+        add(one);
+
+        txtOne = new JTextField();
+        txtOne.setBounds(105, 10, 90, 21);
+        add(txtOne);
+		
 		pack();
 		validate();
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -65,13 +81,13 @@ public class Server extends JFrame implements Runnable {
 	// -------------------- methods -------------------------------------------
 	
 	public static void main(String[] args) {
-		new Server();
-		game = new Game();
+		Server server = new Server();
+		server.start();
 	}
 	
 	public synchronized void start() {
 		if (running) return;
-		speech = new ArrayList<String>(30);
+		game = new Game(this);
 		running = true;
 
 		thread = new Thread(this, "Server");
@@ -85,6 +101,8 @@ public class Server extends JFrame implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		speech = new ArrayList<String>(30);
 		connectedPlayers = new ArrayList<OnlinePlayer>();
 	}
 	
@@ -98,12 +116,16 @@ public class Server extends JFrame implements Runnable {
 				socket.receive(packet);
 			} catch (IOException e) {
 				e.printStackTrace();
+			} catch (NullPointerException e) {
+				//TODO find out why this throws
+				e.printStackTrace();
+				//System.out.println(socket.getLocalPort());
 			}
 			
 			try {
 				parsePacket(packet.getData(), packet.getAddress(), packet.getPort());
 			} catch (UnknownHostException e) {
-				System.err.println("butts, it doesn't like localhost.");
+				System.err.println(e);
 			}
 			String message = new String(packet.getData());
 			//System.out.println("CLIENT> " + new String(packet.getData()));
@@ -115,6 +137,7 @@ public class Server extends JFrame implements Runnable {
 	public synchronized void stop() {
 		running = false;
 		dispose();
+		if (!socket.isClosed()) socket.close();
 		try {
 			game.exit();
 			new Thread(){
@@ -146,7 +169,8 @@ public class Server extends JFrame implements Runnable {
 		String message = new String(data).trim();
 		PacketTypes type;
 		try {
-			type = Packet.lookupPacket(Integer.parseInt(message.substring(0, 2)));
+			if (message.length() < 2) type = PacketTypes.INVALID;
+			else type = Packet.lookupPacket(Integer.parseInt(message.substring(0, 2)));
 		} catch (NumberFormatException e) {
 			type = PacketTypes.INVALID;
 		}
@@ -155,7 +179,7 @@ public class Server extends JFrame implements Runnable {
 			Packet00Login packet = new Packet00Login(data);
 			System.out.println("[" + address.getHostAddress() + ":" + port + "] " + packet.username() + " has connected.");
 			OnlinePlayer player = new OnlinePlayer(packet.x(), packet.y(), game, 
-						game.getTimer(), packet.username(), address, port, 
+						packet.username(), address, port, 
 						game.getLevel());
 			System.out.println(player);
 			addConnection(player, packet);
@@ -166,10 +190,15 @@ public class Server extends JFrame implements Runnable {
 			removeConnection(packet1);
 			break;
 		case MOVE: // move the player
-			handleMovement(new Packet02Move(data));
+			Packet02Move packet2 = new Packet02Move(data);
+			handleMovement(packet2);
+			packet2.writeData(this);
 			break;
 		case SAY:
 			say(new Packet03Speech(data));
+			break;
+		case SETTLEMENT:
+			construct(new Packet04Settlement(data));
 		case INVALID:
 		default: //TODO complain about unrecognised format
 			break;
@@ -250,6 +279,16 @@ public class Server extends JFrame implements Runnable {
 				sendData(data, p.ip, p.port);
 			}
 		}
+	}
+	
+	public void setOne(String text) {
+		one.setText(text);
+	}
+	
+	private void construct(Packet04Settlement p) {
+		ConstructionSettlement gensett = new ConstructionSettlement(game, 
+																p.x(), p.y());
+		game.addConSett(gensett);
 	}
 
 }

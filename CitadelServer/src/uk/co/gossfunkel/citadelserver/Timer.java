@@ -1,4 +1,4 @@
-package uk.co.gossfunkel.citadel;
+package uk.co.gossfunkel.citadelserver;
 
 public class Timer {
 	

@@ -4,16 +4,13 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 
 import uk.co.gossfunkel.citadelserver.Game;
-import uk.co.gossfunkel.citadelserver.Timer;
 import uk.co.gossfunkel.citadelserver.entity.Entity;
 import uk.co.gossfunkel.citadelserver.level.Level;
 import uk.co.gossfunkel.citadelserver.level.tile.Tile;
-import uk.co.gossfunkel.citadelserver.net.packets.Packet02Move;
 
 public class OnlinePlayer extends Mob {
 
 	protected Game game;
-	private Timer timer;
 	protected final String username;
 	int xa, ya;
 	boolean flip;
@@ -25,10 +22,9 @@ public class OnlinePlayer extends Mob {
 	public InetAddress ip;
 	public int port;
 
-	public OnlinePlayer(Game game, Timer timer, String username,
+	public OnlinePlayer(Game game, String username,
 			InetAddress ip, int port, Level level) {
 		this.game = game;
-		this.timer = timer;
 		this.level = level;
 		this.username = username;
 		nearEntities = new ArrayList<Entity>();
@@ -39,9 +35,9 @@ public class OnlinePlayer extends Mob {
 	}
 	
 	// spawn locale constructor
-	public OnlinePlayer(int x, int y, Game game, Timer timer, String username, 
+	public OnlinePlayer(int x, int y, Game game, String username, 
 			InetAddress ip, int port, Level level) {
-		this(game, timer, username, ip, port, level);
+		this(game, username, ip, port, level);
 		teleport(x, y); 
 	}
 	
