@@ -11,9 +11,11 @@ public class ConstructionSettlement extends Entity {
 	protected Tile sprite;
 	protected int level;
 	private int progress = 0;
+	private String maker;
 
-	public ConstructionSettlement(Game game, int x, int y) {
+	public ConstructionSettlement(Game game, int x, int y, String usnm) {
 		this.game = game;
+		maker = usnm;
 		this.x = TileCoordinate.round(x);
 		this.y = TileCoordinate.round(y);
 	}
@@ -27,7 +29,7 @@ public class ConstructionSettlement extends Entity {
 	}
 	
 	private void complete() {
-		Settlement s = new Settlement(x, y);
+		Settlement s = new Settlement(x, y, maker);
 		game.addSett(s);
 	}
 

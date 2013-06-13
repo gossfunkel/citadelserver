@@ -8,8 +8,12 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import uk.co.gossfunkel.citadelserver.entity.mob.OnlinePlayer;
@@ -46,8 +50,11 @@ public class Server extends JFrame implements Runnable {
 	private boolean running = false;
 	
 	// UI stuff
-	JLabel one;
-	JTextField txtOne;
+	private JLabel one;
+	private JTextField txtOne;
+	private JButton submitTxtOne;
+	private JTextArea outArea;
+	private JScrollPane outScroll;
 	
 	// net stuff
 	private DatagramSocket socket;
@@ -70,6 +77,17 @@ public class Server extends JFrame implements Runnable {
         txtOne = new JTextField();
         txtOne.setBounds(105, 10, 90, 21);
         add(txtOne);
+        
+        submitTxtOne = new JButton("send");
+        submitTxtOne.setBounds(200, 10, 40, 21);
+        
+        outScroll = new JScrollPane();
+        outArea = new JTextArea(5, 20);
+        outArea.setEditable(false);
+        outScroll.setViewportView(outArea);
+        
+        add(outScroll);
+        add(outArea);
 		
 		pack();
 		validate();
@@ -108,6 +126,13 @@ public class Server extends JFrame implements Runnable {
 	
 	public void run() {
 		requestFocus();
+		
+		try {
+			// sleep to stop socket receiving null packets
+			Thread.sleep(200);
+		} catch (InterruptedException e) {
+			System.out.println("interupted");
+		}
 
 		while (running) {
 			byte[] data = new byte[1024];
@@ -286,9 +311,16 @@ public class Server extends JFrame implements Runnable {
 	}
 	
 	private void construct(Packet04Settlement p) {
-		ConstructionSettlement gensett = new ConstructionSettlement(game, 
-																p.x(), p.y());
+		ConstructionSettlement gensett = 
+				new ConstructionSettlement(game, p.x(), p.y(), p.username());
 		game.addConSett(gensett);
+	} 
+	
+	/* send output to outputBox
+	 * 
+	 */
+	public void postOutput(String str) {
+		outArea.append(str);
 	}
 
 }

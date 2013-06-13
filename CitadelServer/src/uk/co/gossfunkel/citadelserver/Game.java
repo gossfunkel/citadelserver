@@ -70,6 +70,8 @@ public class Game implements Runnable {
 	}
 	
 	public void update() {
+		//TODO update UI
+		
 		if (getTimer().getDay() != day) {
 			day = getTimer().getDay();
 		}
@@ -117,7 +119,7 @@ public class Game implements Runnable {
 							TileCoordinate.scale(ym)).equals(Tile.solid)) {
 				// say to player("Illegal position");
 			} else {
-				Settlement genset = new Settlement(xm, ym);
+				Settlement genset = new Settlement(xm, ym, player.username());
 				settlements.add(genset);
 				settx.add(genset.x());
 				setty.add(genset.y());
