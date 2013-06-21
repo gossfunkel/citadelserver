@@ -25,4 +25,8 @@ public class Settlement extends Entity {
 	public void levelUp() {
 		level++;
 	}
+	
+	public String getRaw() {
+		return (x + "_" + y + "_" + owner);
+	}
 }

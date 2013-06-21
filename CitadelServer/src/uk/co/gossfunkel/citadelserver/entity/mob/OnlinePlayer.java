@@ -78,5 +78,13 @@ public class OnlinePlayer extends Mob {
 		string += "; " + x + ", " + y;
 		return string;
 	}
+
+	public String getRaw() {
+		return (x + "_" + y + "_" + username);
+	}
+
+	public String getLocation() {
+		return ("x:" + x + ", y:" + y);
+	}
 	
 }

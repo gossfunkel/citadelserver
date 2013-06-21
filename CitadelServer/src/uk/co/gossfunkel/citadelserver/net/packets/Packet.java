@@ -5,7 +5,8 @@ import uk.co.gossfunkel.citadelserver.Server;
 public abstract class Packet {
 
 	public static enum PacketTypes {
-		INVALID(-1), LOGIN(00), DISCONNECT(01), MOVE(02), SAY(03), SETTLEMENT(04);
+		INVALID(-1), LOGIN(00), DISCONNECT(01), MOVE(02), SAY(03), 
+			SETTLEMENT(04), LOGINRESPONSE(10);
 		
 		private int packetId;
 		private PacketTypes(int pid) {

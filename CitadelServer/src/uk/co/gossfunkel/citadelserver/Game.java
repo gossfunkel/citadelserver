@@ -22,6 +22,7 @@ public class Game implements Runnable {
 	
 	private static List<Settlement> settlements;
 	private static List<ConstructionSettlement> consettlements;
+	private List<OnlinePlayer> players;
 	private static List<Integer> settx;
 	private static List<Integer> setty;
 	
@@ -39,6 +40,7 @@ public class Game implements Runnable {
 		
 		settlements = new ArrayList<Settlement>();
 		consettlements = new ArrayList<ConstructionSettlement>();
+		players = new ArrayList<OnlinePlayer>();
 		settx = new ArrayList<Integer>();
 		setty = new ArrayList<Integer>();
 
@@ -151,6 +153,27 @@ public class Game implements Runnable {
 
 	public Timer getTimer() {
 		return timer;
+	}
+	
+	public ArrayList<OnlinePlayer> getPlayers() {
+		return (ArrayList<OnlinePlayer>) players;
+	}
+	
+	public String getPlayerLocation(String playerName) {
+		for (int i = 0; i < players.size(); i++) {
+			if (players.get(i).username().equals(playerName)) {
+				return players.get(i).getLocation();
+			}
+		}
+		return null;
+	}
+	
+	public ArrayList<Settlement> getSettlements() {
+		return (ArrayList<Settlement>) settlements;
+	}
+	
+	public void addPlayer(OnlinePlayer player) {
+		players.add(player);
 	}
 
 	public void exit() {
