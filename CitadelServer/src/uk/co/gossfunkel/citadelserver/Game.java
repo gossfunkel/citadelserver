@@ -43,15 +43,17 @@ public class Game implements Runnable {
 		players = new ArrayList<OnlinePlayer>();
 		settx = new ArrayList<Integer>();
 		setty = new ArrayList<Integer>();
+		timer = new Timer();
 
 		setLevel(new SpawnLevel("/garden.png"));
 	}
 
 	@Override
 	public void run() {
+		running = true;
 		server.setOne("Game running");
 		while (running) {
-			getTimer().tick();
+			timer.tick();
 			if (System.currentTimeMillis() - getTimer().getSecond() > 1000) {
 				// every second, add a second, print fps and mod title with fps
 				getTimer().accumulateSecond();
@@ -69,6 +71,10 @@ public class Game implements Runnable {
 			}
 			
 		}
+	}
+
+	public void stop() {
+		running = false;
 	}
 	
 	public void update() {
@@ -174,10 +180,6 @@ public class Game implements Runnable {
 	
 	public void addPlayer(OnlinePlayer player) {
 		players.add(player);
-	}
-
-	public void exit() {
-		running = false;
 	}
 
 }

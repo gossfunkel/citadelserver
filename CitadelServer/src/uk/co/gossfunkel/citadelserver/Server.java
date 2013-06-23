@@ -1,13 +1,5 @@
 package uk.co.gossfunkel.citadelserver;
 
-import java.awt.BorderLayout;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -15,13 +7,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
 
 import uk.co.gossfunkel.citadelserver.entity.mob.OnlinePlayer;
 import uk.co.gossfunkel.citadelserver.entity.settlement.ConstructionSettlement;
@@ -38,32 +23,18 @@ import uk.co.gossfunkel.citadelserver.net.packets.PacketXXInvalid;
 /* The game's main running class
  * 
  */
-public class Server extends JFrame implements Runnable {
-	private static final long serialVersionUID = 1L;
+public class Server implements Runnable {
 	
 	// -------------------- variables -----------------------------------------
 	
-	public static String title = "citadelserver";
-	
-	private static Game game;
-	private static Thread gameThread;
-	
-	// screen dimensions (16:9) etc
-	private static int width = 600;
-	private static int height = 650;
+	private Game game;
+	private GUI gui;
 	
 	// multithreading stuff
 	private Thread thread;
 	
 	// loop stuff
 	private boolean running = false;
-	
-	// UI stuff
-	private JLabel one;
-	private JTextField txtOne;
-	private JButton submitTxtOne;
-	private JTextArea txtPane;
-	private JScrollPane txtScrollPane;
 	
 	// net stuff
 	private DatagramSocket socket;
@@ -74,84 +45,6 @@ public class Server extends JFrame implements Runnable {
 	// -------------------- constructors --------------------------------------
 	
 	public Server() {
-		Dimension size = new Dimension(width, height);
-		setPreferredSize(size);	
-		setTitle(title);
-		Container cp = getContentPane();
-		cp.setLayout(null);
-		
-		// currently not resisable
-		setResizable(false);
-		
-		// Running label
-		one = new JLabel("Game not running");
-        one.setBounds(10, 10, 90, 21);
-        add(one);
-
-        // Text field. Send if hit enter
-        txtOne = new JTextField();
-        txtOne.setBounds(105, 10, 400, 21);
-        txtOne.addKeyListener(new KeyListener() {
-        	Boolean enterPressed = false;
-			@Override
-			public void keyPressed(KeyEvent arg0) {
-				if ((arg0.getKeyCode() == KeyEvent.VK_ENTER) && !enterPressed) {
-					parseInput(txtOne.getText());
-					txtOne.setText("");
-					enterPressed = true;
-				}
-			}
-			@Override
-			public void keyReleased(KeyEvent arg0) {enterPressed = false;}
-			@Override
-			public void keyTyped(KeyEvent e) {}
-        });
-        add(txtOne);
-        
-        // Send Button
-        submitTxtOne = new JButton("send");
-        submitTxtOne.setBounds(510, 10, 80, 21);
-        submitTxtOne.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				parseInput(txtOne.getText());
-				txtOne.setText("");
-			}
-        });
-        add(submitTxtOne);
-
-        // Output text pane
-        txtPane = new JTextArea(10, 40);
-        txtPane.setEditable(false);
-        txtPane.setFont(new Font("Courier", Font.PLAIN, 12));  
-        txtScrollPane = new JScrollPane(txtPane);
-        txtScrollPane.setVerticalScrollBarPolicy(
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        txtScrollPane.setPreferredSize(new Dimension(width-20, height-20));
-        txtScrollPane.setMinimumSize(new Dimension(10, 10));
-        txtScrollPane.setBounds(10, 40, width-20, height-75);
-        cp.add(txtScrollPane, BorderLayout.CENTER);
-		
-		pack();
-		validate();
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setLocationRelativeTo(null);
-		setVisible(true);
-	}
-	
-	// -------------------- methods -------------------------------------------
-	
-	public synchronized void start() {
-		if (running) return;
-		game = new Game(this);
-		running = true;
-
-		thread = new Thread(this, "Server");
-		thread.start();
-
-		gameThread = new Thread(game, "Game");
-		gameThread.start();
-
 		try {
 			this.socket = new DatagramSocket(1042);
 		} catch (Exception e) {
@@ -162,16 +55,24 @@ public class Server extends JFrame implements Runnable {
 		connectedPlayers = new ArrayList<OnlinePlayer>();
 	}
 	
+	// -------------------- methods -------------------------------------------
+	
+	public void addGame(Game game) {
+		this.game = game;
+	}
+	
+	public void addGui(GUI gui) {
+		this.gui = gui;
+	}
+	
 	public void run() {
-		requestFocus();
-		
+		running = true;
 		try {
 			// sleep to stop socket receiving null packets
 			Thread.sleep(200);
 		} catch (InterruptedException e) {
 			System.out.println("interupted");
 		}
-
 		while (running) {
 			byte[] data = new byte[1024];
 			DatagramPacket packet = new DatagramPacket(data, data.length);
@@ -180,28 +81,29 @@ public class Server extends JFrame implements Runnable {
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (NullPointerException e) {
+			} catch (Exception e) {
+				System.out.println("Socket error: " + e);
+			} 
 				// if server takes too long to start up,
 				//   can result in a nullpointer
-			}
-			
-			try {
-				parsePacket(packet.getData(), packet.getAddress(), packet.getPort());
-			} catch (UnknownHostException e) {
-				System.err.println(e);
-			}
 			String message = new String(packet.getData());
-			//System.out.println("CLIENT> " + message);
 			if (message.trim().equalsIgnoreCase("ping"))
 				sendData("pong".getBytes(), packet.getAddress(), packet.getPort());
+			else {
+				try {
+					parsePacket(packet.getData(), packet.getAddress(), packet.getPort());
+				} catch (UnknownHostException e) {
+					System.err.println(e);
+				}
+			}
+			//System.out.println("CLIENT> " + message);
 		}
 	}
 	
 	public synchronized void stop() {
 		running = false;
-		dispose();
 		if (!socket.isClosed()) socket.close();
 		try {
-			game.exit();
 			new Thread(){
 	            public void run() {
 	                System.exit(0);
@@ -359,10 +261,6 @@ public class Server extends JFrame implements Runnable {
 		}
 	}
 	
-	public void setOne(String text) {
-		one.setText(text);
-	}
-	
 	private void construct(Packet04Settlement p) {
 		ConstructionSettlement gensett = 
 				new ConstructionSettlement(game, p.x(), p.y(), p.username());
@@ -373,17 +271,21 @@ public class Server extends JFrame implements Runnable {
 	 * 
 	 */
 	public void postOutput(String str) {
-		txtPane.append(str.trim() + "\n");
+		gui.add(str);
 	}
 	
 	public void parseInput(String str) {
 		str.trim();
-		if (!str.equals("")) postOutput(str);
+		//if (!str.equals("")) postOutput(str);
 		if (str.startsWith("/")) {
 			// parse as command
 			str.toLowerCase();
-			if (str.indexOf(" ") < -1) {
+			if (str.indexOf(" ") > 0) {
 				switch (str.substring(1, str.indexOf(" "))) {
+				case "say":
+					Packet03Speech pack = new Packet03Speech("SERVER", str.substring(4));
+					say(pack);
+					break;
 				case "disconnect": //TODO disconnect player stated
 					postOutput("disconnecting " + str.substring(str.indexOf(" ")));
 					break;
@@ -399,18 +301,29 @@ public class Server extends JFrame implements Runnable {
 					else 
 						postOutput("Player " + player + " could not be found!");
 					break;
-				default: postOutput("Command not recognised."); break;
+				default: 
+					postOutput("Command not recognised: " + 
+								str.substring(1, str.indexOf(" "))); 
+					break;
 				}
 			} else {
 				switch (str.substring(1)) {
-				case "quit": //TODO quit cleanly
+				case "exit": //TODO quit cleanly
 					postOutput("Server going down.");
 					stop();
 					break;
-				default: postOutput("Command not recognised."); break;
+				default: postOutput("Command not recognised: " + 
+										str.substring(1)); break;
 				}
 			}
+		} else {
+			Packet03Speech pack = new Packet03Speech("SERVER", str);
+			say(pack);
 		}
+	}
+	
+	public void setOne(String str) {
+		gui.setOne(str);
 	}
 
 }

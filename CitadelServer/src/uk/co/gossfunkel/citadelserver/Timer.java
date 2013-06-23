@@ -60,10 +60,6 @@ public class Timer {
 		frames = 0;
 	}
 	
-	public int getFPS() {
-		return frames;
-	}
-	
 	public String returnFPS() {
 		return (updates + " ups, " + frames + " fps");
 	}
@@ -78,6 +74,10 @@ public class Timer {
 	public double getDelta() {
 		// return nanosecond difference between now and lastTime
 		return delta;
+	}
+	
+	public int getFPS() {
+		return frames;
 	}
 	
 	public long getSecond() {
