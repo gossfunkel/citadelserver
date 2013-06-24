@@ -32,7 +32,7 @@ public class Tree {
 		return boundingBox;
 	}
 
-	public void onClick() {
+	public void damage() {
 		System.out.println("brokenness: " + brokenness);
 		brokenness++;
 		if (brokenness > 100) {

@@ -21,7 +21,9 @@ public class GUI extends JFrame implements Runnable {
 
 	public static String title = "citadelserver";
 	
+	@SuppressWarnings("unused")
 	private final Server server;
+	@SuppressWarnings("unused")
 	private final Game game;
 
 	private JLabel one;
